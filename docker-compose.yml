@@ -1,0 +1,53 @@
+version: '3'
+
+x-client: &client # common settings for all clients
+  image: edis-python:round-8
+  build:
+    dockerfile: ./dockerfiles/python.Dockerfile
+  command: python -B main.py
+  profiles:
+    - do-not-start-by-default
+  volumes:
+    - ./app:/home/app
+
+services:
+
+  # ------------------------------------------------------------------------- # 
+  # dbms                                                                      #
+  # ------------------------------------------------------------------------- # 
+  # - docker compose up                                                       #
+  # - docker compose down                                                     #
+  # ------------------------------------------------------------------------- # 
+
+  dbms:
+    image: edis-node:round-8
+    build:
+      dockerfile: ./dockerfiles/node.Dockerfile
+    command: node ./index.js
+    environment:
+      - NODE_PATH=/usr/local/lib/node_modules/
+    ports: 
+      - 4000:4000
+    volumes:
+      - ./dbms:/home/dbms
+
+  # ------------------------------------------------------------------------- # 
+  # clients                                                                   #
+  # ------------------------------------------------------------------------- # 
+  # - docker compose run --rm client1                                         #
+  # - docker compose run --rm client2                                         #
+  # ------------------------------------------------------------------------- # 
+  # - docker compose run --rm client1 bash   # for running bash, if necessary #
+  # ------------------------------------------------------------------------- # 
+
+  client1:
+    <<: *client
+    environment:
+      - CLIENT_TYPE=1
+      - CLOCK_DRIFT=-1
+
+  client2:
+    <<: *client
+    environment:
+      - CLIENT_TYPE=2
+      - CLOCK_DRIFT=3
